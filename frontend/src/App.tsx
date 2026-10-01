@@ -39,9 +39,14 @@ export const App: React.FC = () => {
   });
   const [slaRules, setSlaRules] = useState<SLARule[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [justInstalled, setJustInstalled] = useState<boolean>(false);
 
-  // 1. Initialize Monday SDK Context
+  // 1. Initialize Monday SDK Context & Onboarding Detection
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('installed=true')) {
+      setJustInstalled(true);
+    }
+
     getMondayContext().then((ctx) => {
       if (ctx.boardId) {
         setBoardId(String(ctx.boardId));
@@ -168,6 +173,45 @@ export const App: React.FC = () => {
 
       {/* Main Content Body */}
       <main className="main-content">
+        {justInstalled && (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #0073ea 0%, #00c875 100%)',
+              color: '#fff',
+              padding: '16px 20px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              boxShadow: '0 4px 12px rgba(0, 115, 234, 0.25)',
+            }}
+          >
+            <div>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
+                🎉 Welcome! Bottleneck is successfully installed on your monday.com account.
+              </h3>
+              <p style={{ fontSize: '0.85rem', opacity: 0.95, margin: '4px 0 0' }}>
+                Open any board on monday.com, add the <strong>Bottleneck</strong> Board View or Dashboard Widget, and set your SLA duration targets.
+              </p>
+            </div>
+            <button
+              onClick={() => setJustInstalled(false)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: '#fff',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 600,
+              }}
+            >
+              Dismiss ✕
+            </button>
+          </div>
+        )}
+
         {loading && (
           <div style={{ textAlign: 'center', padding: '8px', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             Updating metrics in real-time...

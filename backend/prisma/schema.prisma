@@ -9,6 +9,23 @@ generator client {
 }
 
 // -------------------------------------------------------------
+// 0. Multi-Tenant Accounts / Installations
+// Stores customer credentials when installed from monday.com Marketplace
+// -------------------------------------------------------------
+model Account {
+  id          String   @id @default(uuid())
+  accountId   String   @unique
+  accessToken String
+  userId      String?
+  accountName String?
+  installedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([accountId])
+  @@map("accounts")
+}
+
+// -------------------------------------------------------------
 // 1. Status Events
 // Logs every webhook change event for status columns on monday.com
 // -------------------------------------------------------------

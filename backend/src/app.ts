@@ -7,6 +7,8 @@ import webhookRoutes from './routes/webhookRoutes';
 import mondayRoutes from './routes/mondayRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import slaRoutes from './routes/slaRoutes';
+import oauthRoutes from './routes/oauthRoutes';
+import integrationRoutes from './routes/integrationRoutes';
 
 const app = express();
 
@@ -16,6 +18,8 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // Routes
+app.use('/oauth', oauthRoutes);
+app.use('/integration', integrationRoutes);
 app.use('/webhooks', webhookRoutes);
 app.use('/api/monday', mondayRoutes);
 app.use('/api/analytics', analyticsRoutes);

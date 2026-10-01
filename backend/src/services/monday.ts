@@ -1,4 +1,5 @@
 import initMondayClient from 'monday-sdk-js';
+import prisma from '../db/prisma';
 
 export interface MondayItem {
   id: string;
@@ -27,11 +28,23 @@ export class MondayService {
     this.defaultToken = process.env.MONDAY_API_TOKEN || '';
   }
 
-  private getClient(customToken?: string) {
+  /**
+   * Resolves token: either customToken, customer token by accountId from DB, or fallback default token
+   */
+  async resolveToken(customToken?: string, accountId?: string): Promise<string> {
+    if (customToken) return customToken;
+    if (accountId) {
+      const account = await prisma.account.findUnique({ where: { accountId } });
+      if (account?.accessToken) return account.accessToken;
+    }
+    return this.defaultToken;
+  }
+
+  private getClient(token?: string) {
     const monday = initMondayClient();
-    const token = customToken || this.defaultToken;
-    if (token) {
-      monday.setToken(token);
+    const activeToken = token || this.defaultToken;
+    if (activeToken) {
+      monday.setToken(activeToken);
     }
     return monday;
   }
