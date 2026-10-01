@@ -33,3 +33,5 @@ Thumbs.db
 postgres_data/
 redis_data/
 scratch/
+*.tar.gz
+*.zip
