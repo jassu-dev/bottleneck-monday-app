@@ -1,0 +1,126 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+// -------------------------------------------------------------
+// 1. Status Events
+// Logs every webhook change event for status columns on monday.com
+// -------------------------------------------------------------
+model StatusEvent {
+  id             String   @id @default(uuid())
+  itemId         String
+  boardId        String
+  columnId       String
+  previousStatus String?
+  newStatus      String
+  changedAt      DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  @@index([itemId])
+  @@index([boardId])
+  @@index([boardId, itemId])
+  @@index([changedAt])
+  @@map("status_events")
+}
+
+// -------------------------------------------------------------
+// 2. SLA Rules
+// Configured by managers: defines max duration an item can sit in a given status
+// -------------------------------------------------------------
+model SLARule {
+  id                 String     @id @default(uuid())
+  boardId            String
+  statusLabel        String
+  maxDurationHours   Float      @default(24)
+  maxDurationMinutes Float      @default(1440)
+  actionType         String     @default("NOTIFY") // NOTIFY, ESCALATE_STATUS, MOVE_GROUP
+  targetGroupId      String?    // e.g., "Urgent" group id
+  targetStatus       String?    // e.g., "Critical" status label
+  targetRole         String?    @default("ASSIGNEE") // ASSIGNEE, MANAGER, TEAM_LEAD
+  active             Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  alerts             AlertLog[]
+
+  @@unique([boardId, statusLabel])
+  @@index([boardId])
+  @@map("sla_rules")
+}
+
+// -------------------------------------------------------------
+// 3. Time Tracking Sessions
+// Tracks running and completed timer sessions for Time Tracking Automations
+// "X minutes after monday's time tracking column starts running, do this"
+// -------------------------------------------------------------
+model TimeTrackingSession {
+  id              String    @id @default(uuid())
+  itemId          String
+  boardId         String
+  columnId        String
+  userId          String?
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  durationSeconds Int       @default(0)
+  isRunning       Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([itemId])
+  @@index([boardId])
+  @@index([isRunning])
+  @@index([startedAt])
+  @@map("time_tracking_sessions")
+}
+
+// -------------------------------------------------------------
+// 4. Time Tracking Automation Rules
+// -------------------------------------------------------------
+model TimeTrackingRule {
+  id                 String     @id @default(uuid())
+  boardId            String
+  columnId           String?
+  thresholdMinutes   Int        // e.g. 30, 60, 120
+  actionType         String     @default("NOTIFY") // NOTIFY, ESCALATE_STATUS, MOVE_GROUP
+  targetGroupId      String?    // e.g., "Urgent" group id
+  targetStatus       String?    // e.g., "Critical" status label
+  targetRole         String?    @default("ASSIGNEE") // ASSIGNEE, MANAGER, TEAM_LEAD
+  customMessage      String?
+  active             Boolean    @default(true)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  alerts             AlertLog[]
+
+  @@index([boardId])
+  @@map("time_tracking_rules")
+}
+
+// -------------------------------------------------------------
+// 5. Alert & Automation Incident Logs
+// Deduplicates notifications & records audit trail of actions taken
+// -------------------------------------------------------------
+model AlertLog {
+  id                 String            @id @default(uuid())
+  itemId             String
+  boardId            String
+  ruleType           String            // "SLA_BREACH" | "TIME_TRACKING_THRESHOLD"
+  slaRuleId          String?
+  timeTrackingRuleId String?
+  triggeredAt        DateTime          @default(now())
+  actionTaken        String
+  details            String?
+
+  slaRule            SLARule?          @relation(fields: [slaRuleId], references: [id], onDelete: SetNull)
+  timeTrackingRule   TimeTrackingRule? @relation(fields: [timeTrackingRuleId], references: [id], onDelete: SetNull)
+
+  @@index([itemId, ruleType])
+  @@index([triggeredAt])
+  @@map("alert_logs")
+}
