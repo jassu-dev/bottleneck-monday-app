@@ -98,11 +98,35 @@ services:
     networks:
       - bottleneck-network
 
+  # -------------------------------------------------------------
+  # Caddy 2 - Automated HTTPS Reverse Proxy & SSL Certificates
+  # -------------------------------------------------------------
+  caddy:
+    image: caddy:alpine
+    container_name: bottleneck_caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - bottleneck-network
+
 volumes:
   postgres_data:
     name: bottleneck_postgres_data
   redis_data:
     name: bottleneck_redis_data
+  caddy_data:
+    name: bottleneck_caddy_data
+  caddy_config:
+    name: bottleneck_caddy_config
 
 networks:
   bottleneck-network:

@@ -1,0 +1,11 @@
+{
+    email admin@bottleneck.13.140.190.131.sslip.io
+}
+
+bottleneck.13.140.190.131.sslip.io {
+    reverse_proxy frontend:5173
+}
+
+api-bottleneck.13.140.190.131.sslip.io {
+    reverse_proxy backend:8080
+}
