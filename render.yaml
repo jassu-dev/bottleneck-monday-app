@@ -1,0 +1,53 @@
+services:
+  # Backend API & Webhook Service
+  - type: web
+    name: bottleneck-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bottleneck-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: bottleneck-redis
+          property: connectionString
+      - key: MONDAY_SIGNING_SECRET
+        sync: false
+      - key: MONDAY_API_TOKEN
+        sync: false
+      - key: MONDAY_CLIENT_ID
+        sync: false
+      - key: MONDAY_CLIENT_SECRET
+        sync: false
+
+  # Frontend Nginx React Service
+  - type: web
+    name: bottleneck-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: starter
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: bottleneck-backend
+          property: host
+
+databases:
+  - name: bottleneck-postgres
+    databaseName: bottleneck_db
+    user: postgres
+    plan: starter
+
+  - name: bottleneck-redis
+    plan: starter

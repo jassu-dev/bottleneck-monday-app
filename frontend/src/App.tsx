@@ -11,6 +11,7 @@ import {
   StatusSummary,
   CycleLeadMetrics,
   SLARule,
+  API_BASE,
   fetchStuckHub,
   fetchTimeInStatus,
   fetchCycleLeadTime,
@@ -57,7 +58,7 @@ export const App: React.FC = () => {
   // 2. Fetch Board Data from Backend
   const loadBoardData = useCallback(async (currentBoardId: string) => {
     setLoading(true);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+    const apiUrl = API_BASE;
 
     try {
       // Health check backend

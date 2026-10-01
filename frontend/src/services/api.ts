@@ -1,4 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const getApiBase = (): string => {
+  if (import.meta.env.VITE_API_URL && !import.meta.env.VITE_API_URL.includes('localhost')) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.hostname}:8080`;
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:8080';
+};
+
+export const API_BASE = getApiBase();
 
 export interface StuckItem {
   itemId: string;
